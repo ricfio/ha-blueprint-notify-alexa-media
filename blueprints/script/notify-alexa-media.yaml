@@ -1,0 +1,434 @@
+blueprint:
+  name: Notify Alexa Media
+  description: >-
+    ### 📢 Advanced Alexa Media Player Notification Script
+
+    Sends flexible notifications through the [Alexa Media Player](https://github.com/custom-components/alexa_media) integration ([Service Docs](https://github.com/custom-components/alexa_media/wiki/Notification-Service)) with support for:
+    - **Types**: Text-to-Speech (TTS), Announce, and Mobile Push.
+    - **Target Modes**: All devices, selected devices, dynamic target from a sensor, or Last Called device.
+    - **Advanced Features**: Full SSML markup support for both TTS and Announce ([Amazon Docs](https://developer.amazon.com/en-US/docs/alexa/custom-skills/speech-synthesis-markup-language-ssml-reference.html)), whispered speech, speech rate, volume & pitch control, custom voices, and execution condition helpers.
+    - **Smart Title**: Automatic fallback to "Home Assistant" for push notifications if left blank.
+
+    **Version: 1.0.0**
+  domain: script
+  homeassistant:
+    min_version: 2025.4.4
+  author: ricfio
+  source_url: https://github.com/ricfio/ha-blueprint-notify-alexa-media/blob/main/blueprints/script/notify-alexa-media.yaml
+  input: {}
+icon: mdi:bullhorn
+fields:
+
+  title:
+    name: Title
+    description: |
+      Notification title for Announce and Mobile Push.
+      If left blank for Mobile Push, defaults to "Home Assistant".
+    selector:
+      text:
+
+  message:
+    name: Message
+    description: |
+      Notification message. Supports Alexa SSML markup
+      (e.g. <break time="1s"/>, <say-as interpret-as="time">14:30</say-as>).
+    required: true
+    selector:
+      text:
+        multiline: true
+
+  type:
+    name: Type
+    description: |
+      Select the notification delivery method
+      (TTS speaks text, Announce sends an announcement, Mobile Push sends to the Alexa app).
+    required: true
+    default: tts
+    selector:
+      select:
+        options:
+          - label: Text-to-Speech (TTS)
+            value: tts
+          - label: Announce
+            value: announce
+          - label: Mobile Push
+            value: push
+
+  voice:
+    name: Speaker Voice
+    description: Select the Alexa voice (only for Announce and TTS). Refer to Amazon SSML documentation for supported language-voice combinations.
+    required: true
+    default: default
+    selector:
+      select:
+        mode: dropdown
+        options:
+          - label: "(default)"
+            value: default
+          - label: "🇮🇹 Carla (Italian)"
+            value: Carla
+          - label: "🇮🇹 Giorgio (Italian)"
+            value: Giorgio
+          - label: "🇮🇹 Bianca (Italian - No Whisper)"
+            value: Bianca
+          - label: "🇺🇸 Matthew (English US)"
+            value: Matthew
+          - label: "🇺🇸 Salli (English US)"
+            value: Salli
+          - label: "🇺🇸 Joey (English US)"
+            value: Joey
+          - label: "🇺🇸 Kendra (English US)"
+            value: Kendra
+          - label: "🇺🇸 Joanna (English US)"
+            value: Joanna
+          - label: "🇬🇧 Amy (English UK)"
+            value: Amy
+          - label: "🇬🇧 Brian (English UK)"
+            value: Brian
+          - label: "🇬🇧 Emma (English UK)"
+            value: Emma
+          - label: "🇪🇸 Conchita (Spanish)"
+            value: Conchita
+          - label: "🇪🇸 Enrique (Spanish)"
+            value: Enrique
+          - label: "🇲🇽 Mia (Spanish MX)"
+            value: Mia
+          - label: "🇫🇷 Celine (French)"
+            value: Celine
+          - label: "🇫🇷 Lea (French)"
+            value: Lea
+          - label: "🇫🇷 Mathieu (French)"
+            value: Mathieu
+          - label: "🇩🇪 Marlene (German)"
+            value: Marlene
+          - label: "🇩🇪 Hans (German)"
+            value: Hans
+          - label: "🇩🇪 Vicki (German)"
+            value: Vicki
+
+  whisper:
+    name: Whispered speech
+    description: Enable whispered speech (only for Announce and TTS; unsupported for Bianca voice).
+    required: true
+    default: false
+    selector:
+      boolean:
+
+  display:
+    name: Display Announcement
+    description: Also display the announcement on compatible Alexa devices (Announce only). Speak only is recommended when using SSML.
+    required: true
+    default: false
+    selector:
+      boolean:
+
+  skip_unavailable:
+    name: Skip Unavailable Devices
+    description: Exclude unavailable or unknown devices.
+    required: true
+    default: true
+    selector:
+      boolean:
+
+  rate:
+    name: Speech Rate
+    description: Control the speed of the speech using SSML prosody (TTS/Announce only).
+    required: true
+    default: medium
+    selector:
+      select:
+        mode: dropdown
+        options:
+          - label: Extra Slow
+            value: x-slow
+          - label: Slow
+            value: slow
+          - label: Normal
+            value: medium
+          - label: Fast
+            value: fast
+          - label: Extra Fast
+            value: x-fast
+
+  volume:
+    name: Speech Volume
+    description: Control the volume of the speech using SSML prosody (TTS/Announce only).
+    required: true
+    default: medium
+    selector:
+      select:
+        mode: dropdown
+        options:
+          - label: Silent
+            value: silent
+          - label: Extra Soft
+            value: x-soft
+          - label: Soft
+            value: soft
+          - label: Normal
+            value: medium
+          - label: Loud
+            value: loud
+          - label: Extra Loud
+            value: x-loud
+
+  pitch:
+    name: Speech Pitch
+    description: Control the pitch/tone of the speech using SSML prosody (TTS/Announce only).
+    required: true
+    default: medium
+    selector:
+      select:
+        mode: dropdown
+        options:
+          - label: Extra Low
+            value: x-low
+          - label: Low
+            value: low
+          - label: Normal
+            value: medium
+          - label: High
+            value: high
+          - label: Extra High
+            value: x-high
+
+  sound_preset:
+    name: Sound Preset
+    description: Select a curated Amazon Sound Bank clip to play before the message (Announce/TTS only). Use Sound URI below for any other clip from the full [Amazon Sound Library](https://developer.amazon.com/en-US/docs/alexa/custom-skills/ask-soundlibrary.html).
+    required: true
+    default: none
+    selector:
+      select:
+        mode: dropdown
+        options:
+          - label: None
+            value: none
+          - label: "🔔 Doorbell Chime"
+            value: soundbank://soundlibrary/home/amzn_sfx_doorbell_chime_01
+          - label: "🔔 Bell Short Chime"
+            value: soundbank://soundlibrary/musical/amzn_sfx_bell_short_chime_01
+          - label: "✨ Fairy Sparkle Chimes"
+            value: soundbank://soundlibrary/magic/amzn_sfx_fairy_sparkle_chimes_01
+          - label: "🎵 Chimes"
+            value: soundbank://soundlibrary/bell/chimes/chimes_01
+          - label: "🚗 Car Alarm"
+            value: soundbank://soundlibrary/alarms/car_alarms/car_alarm_01
+
+  sound_uri:
+    name: Sound URI (Advanced)
+    description: Optional custom Amazon Sound Bank URI (e.g. soundbank://soundlibrary/...). Overrides the preset above. See the full [Amazon Sound Library](https://developer.amazon.com/en-US/docs/alexa/custom-skills/ask-soundlibrary.html).
+    selector:
+      text:
+
+  target_mode:
+    name: Alexa Target Selection
+    description: Choose which Alexa devices receive the notification.
+    required: true
+    default: selected
+    selector:
+      select:
+        options:
+          - label: All Alexa Devices
+            value: all
+          - label: Selected Alexa Devices
+            value: selected
+          - label: Dynamic Alexa Device
+            value: current
+          - label: Last Called Alexa Device
+            value: last_called
+
+  target_sensor:
+    name: Alexa Target Sensor
+    description: Sensor entity containing the media_player entity ID to target (required when Target Selection is set to "Dynamic Alexa Device").
+    selector:
+      entity:
+        filter:
+          - domain: sensor
+
+  target_entities:
+    name: Media Player Entities
+    description: Select one or more Alexa Media Player entities directly (required when Target Selection is set to "Selected Alexa Devices").
+    default: []
+    selector:
+      entity:
+        filter:
+          - domain: media_player
+            integration: alexa_media
+        multiple: true
+
+  require_on:
+    name: Required Helpers ON
+    description: Send only when every selected helper is ON.
+    selector:
+      entity:
+        filter:
+          - domain: input_boolean
+        multiple: true
+
+  require_off:
+    name: Required Helpers OFF
+    description: Send only when every selected helper is OFF.
+    selector:
+      entity:
+        filter:
+          - domain: input_boolean
+        multiple: true
+
+sequence:
+  - variables:
+      # Notification
+      title: >-
+        {% set title = title | default('') | trim %}
+        {{ title if title != '' else ('Home Assistant' if type == 'push' else '') }}
+      message: "{{ message | default('') }}"
+      type: "{{ type | default('tts') }}"
+      display: "{{ display | default(false, true) | bool }}"
+
+      # Speaker voice
+      voice_name: >-
+        {{ '' if voice | default('default', true) == 'default' else voice }}
+      voice_whisper: "{{ whisper | default(false, true) | bool }}"
+
+      # Speech effects
+      rate: "{{ rate | default('medium') }}"
+      volume: "{{ volume | default('medium') }}"
+      pitch: "{{ pitch | default('medium') }}"
+
+      # Sound effects
+      sound_preset: "{{ sound_preset | default('none') }}"
+      sound_uri: "{{ sound_uri | default('') | trim }}"
+
+      # Targets
+      target_mode: "{{ target_mode | default('selected') }}"
+      target_sensor: "{{ target_sensor | default('') }}"
+      target_entities: "{{ target_entities | default([], true) }}"
+      skip_unavailable: "{{ skip_unavailable | default(true, true) | bool }}"
+
+      # Conditions
+      require_on: "{{ require_on | default([], true) }}"
+      require_off: "{{ require_off | default([], true) }}"
+
+      target_resolved_entities: >-
+        {% set amp_entities = integration_entities('alexa_media') %}
+        {% if target_mode == 'all' %}
+          {{
+            amp_entities
+            | select('match', '^media_player\.')
+            | list
+          }}
+        {% elif target_mode == 'selected' %}
+          {{
+            target_entities
+            | select('in', amp_entities)
+            | unique
+            | list
+          }}
+        {% elif target_mode == 'current' %}
+          {% set current = states(target_sensor) if target_sensor else '' %}
+          {{
+            [current]
+            if current in amp_entities and current.startswith('media_player.')
+            else []
+          }}
+        {% else %}
+          []
+        {% endif %}
+
+      target_filtered_entities: >-
+        {% set ns = namespace(items=[]) %}
+        {% for entity in target_resolved_entities %}
+          {% if not skip_unavailable
+                or states(entity) not in ['unknown', 'unavailable'] %}
+            {% set ns.items = ns.items + [entity] %}
+          {% endif %}
+        {% endfor %}
+        {{ ns.items }}
+
+      message_payload: >-
+        {% set ns = namespace(message=message) %}
+        {% if type in ['tts', 'announce'] %}
+          {% set audio_src = sound_uri if sound_uri != '' else sound_preset %}
+          {% if audio_src and audio_src != 'none' %}
+            {% set ns.message = "<audio src='" ~ audio_src ~ "'/> " ~ ns.message %}
+          {% endif %}
+          {% if voice_whisper and voice != 'Bianca' %}
+            {% set ns.message =
+              '<amazon:effect name="whispered">' ~ ns.message ~ '</amazon:effect>'
+            %}
+          {% endif %}
+          {% if rate and rate != 'medium' %}
+            {% set ns.message =
+              '<prosody rate="' ~ rate ~ '">' ~ ns.message ~ '</prosody>'
+            %}
+          {% endif %}
+          {% if volume and volume != 'medium' %}
+            {% set ns.message =
+              '<prosody volume="' ~ volume ~ '">' ~ ns.message ~ '</prosody>'
+            %}
+          {% endif %}
+          {% if pitch and pitch != 'medium' %}
+            {% set ns.message =
+              '<prosody pitch="' ~ pitch ~ '">' ~ ns.message ~ '</prosody>'
+            %}
+          {% endif %}
+          {% if voice_name %}
+            {% set ns.message =
+              '<voice name="' ~ voice_name ~ '">' ~ ns.message ~ '</voice>'
+            %}
+          {% endif %}
+        {% endif %}
+        {{ ns.message }}
+
+  - condition: template
+    alias: Check Target Availability
+    value_template: >-
+      {{
+        target_mode == 'last_called'
+        or target_filtered_entities | count > 0
+      }}
+
+  - condition: template
+    alias: Check Required ON and OFF Conditions
+    value_template: >-
+      {% set required_on_ok =
+        (
+          expand(require_on)
+          | selectattr('state', 'eq', 'on')
+          | list
+          | count
+        ) == (require_on | count)
+      %}
+      {% set required_off_ok =
+        (
+          expand(require_off)
+          | selectattr('state', 'eq', 'off')
+          | list
+          | count
+        ) == (require_off | count)
+      %}
+      {{ required_on_ok and required_off_ok }}
+
+  - variables:
+      service_data:
+        title: "{{ title }}"
+        message: "{{ message_payload }}"
+        data:
+          type: "{{ type }}"
+          method: "{{ 'all' if display else 'speak' }}"
+
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: "{{ target_mode == 'last_called' }}"
+        sequence:
+          - action: notify.alexa_media_last_called
+            alias: Send Notification to Last Called Device
+            data: "{{ service_data }}"
+    default:
+      - action: notify.alexa_media
+        alias: Send Alexa Notification
+        data: "{{ service_data | combine({'target': target_filtered_entities}) }}"
+
+mode: parallel
+max: 10
+max_exceeded: warning
