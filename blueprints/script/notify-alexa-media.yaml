@@ -14,7 +14,6 @@ blueprint:
   homeassistant:
     min_version: 2025.4.4
   author: ricfio
-  source_url: https://github.com/ricfio/ha-blueprint-notify-alexa-media/blob/main/blueprints/script/notify-alexa-media.yaml
   input: {}
 icon: mdi:bullhorn
 fields:
